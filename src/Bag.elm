@@ -37,12 +37,12 @@ empty = Bag Dict.empty
 {-| Create a bag with n copies of a value.
 -}
 repeat : comparable -> Int -> Bag comparable
-repeat value amount = Bag <| Dict.singleton value amount
+repeat v n = Bag <| Dict.singleton v n
 
 {-| Insert n copies of a value into a bag.
 -}
 insert : comparable -> Int -> Bag comparable -> Bag comparable
-insert value amount bag = Bag <| Dict.insert value (count value bag + amount) (dict bag)
+insert v n b = Bag <| Dict.insert v (count v b + n) (dict b)
 
 {-| Remove n copies of a value from a bag.
 If n is greater than the numbers of copies that are in the bag, then all copies are simply removed.
@@ -52,27 +52,27 @@ If n is greater than the numbers of copies that are in the bag, then all copies 
     remove 'a' 3 bag == fromList ['b']
 -}
 remove : comparable -> Int -> Bag comparable -> Bag comparable
-remove value amount bag =
-    if count value bag - amount <= 0
-    then Bag <| Dict.remove value (dict bag)
-    else Bag <| Dict.insert value (count value bag - amount) (dict bag)
+remove v n b =
+    if count v b - n <= 0
+    then Bag <| Dict.remove v (dict b)
+    else Bag <| Dict.insert v (count v b - n) (dict b)
 
 {-| Determine if a bag is empty.
 -}
 isEmpty : Bag a -> Bool
-isEmpty (Bag dict) = Dict.isEmpty dict
+isEmpty b = Dict.isEmpty (dict b)
 
 {-| Determine if a value is in a bag.
 -}
 member : comparable -> Bag comparable -> Bool
-member value (Bag dict) = Dict.member value dict
+member v b = Dict.member v (dict b)
 
 {-| Determine how many of a certain value are in a bag.
 -}
 count : comparable -> Bag comparable -> Int
-count value (Bag dict) = Maybe.withDefault 0 <| Dict.get value dict
+count v b = Maybe.withDefault 0 <| Dict.get v (dict b)
 
 {-| Determine how many values are in a bag.
 -}
 size : Bag a -> Int
-size (Bag dict) = Dict.size dict
+size b = Dict.size (dict b)
