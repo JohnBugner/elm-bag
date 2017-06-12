@@ -67,12 +67,12 @@ isEmpty b = Dict.isEmpty (dict b)
 member : comparable -> Bag comparable -> Bool
 member v b = Dict.member v (dict b)
 
-{-| Determine how many of a certain value are in a bag.
+{-| Determine the number of copies of a value in a bag.
 -}
 count : comparable -> Bag comparable -> Int
 count v b = Maybe.withDefault 0 <| Dict.get v (dict b)
 
-{-| Determine how many values are in a bag.
+{-| Determine the number of values in a bag.
 -}
 size : Bag a -> Int
 size b = Dict.size (dict b)
