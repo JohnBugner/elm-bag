@@ -3,6 +3,7 @@ module Bag exposing
     , empty, repeat, insert, remove
     , isEmpty, member, count, size
     , union, intersect, diff
+    , toList, fromList
     )
 
 {-| A set of values where, unlike `Set`, each value can appear multiple times.
@@ -21,6 +22,9 @@ insert, remove, and query operations all take *O(log n)* time.
 
 # Combine
 @docs union, intersect, diff
+
+# Lists
+@docs toList, fromList
 -}
 
 import Dict exposing (Dict)
@@ -122,3 +126,13 @@ diff b1 b2 =
         right _ _ d = d
     in
         Bag <| Dict.merge left both right (dict b1) (dict b2) Dict.empty
+
+{-| Convert a bag into a list, sorted from lowest to highest.
+-}
+toList : Bag comparable -> List comparable
+toList b = List.concatMap (\ (v, n) -> List.repeat n v) <| Dict.toList (dict b)
+
+{-| Convert a list into a bag.
+-}
+fromList : List comparable -> Bag comparable
+fromList = List.foldl (\ v -> insert v 1) empty
