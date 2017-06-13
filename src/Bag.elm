@@ -4,6 +4,7 @@ module Bag exposing
     , isEmpty, member, count, size
     , union, intersect, diff
     , toList, fromList
+    , map, foldl, foldr, filter, partition
     )
 
 {-| A set of values where, unlike `Set`, each value can appear multiple times.
@@ -25,6 +26,9 @@ insert, remove, and query operations all take *O(log n)* time.
 
 # Lists
 @docs toList, fromList
+
+# Transform
+@docs map, foldl, foldr, filter, partition
 -}
 
 import Dict exposing (Dict)
@@ -132,3 +136,33 @@ toList b = List.concatMap (\ (v, n) -> List.repeat n v) <| Dict.toList (dict b)
 -}
 fromList : List comparable -> Bag comparable
 fromList = List.foldl (insert 1) empty
+
+{-| Map a function onto a bag, creating a new bag.
+-}
+map : (comparable -> comparable2) -> Bag comparable -> Bag comparable2
+map f b = fromList <| List.map f <| toList b
+
+{-| Fold over the values in a bag, in order from lowest to highest.
+-}
+foldl : (comparable -> b -> b) -> b -> Bag comparable -> b
+foldl f r b = Dict.foldl (\ v _ r -> f v r) r (dict b)
+
+{-| Fold over the values in a bag, in order from highest to lowest
+-}
+foldr : (comparable -> b -> b) -> b -> Bag comparable -> b
+foldr f r b = Dict.foldr (\ v _ r -> f v r) r (dict b)
+
+{-| Create a new bag consisting only of values which satisfy a predicate.
+-}
+filter : (comparable -> Bool) -> Bag comparable -> Bag comparable
+filter f b = Bag <| Dict.filter (\ v _ -> f v) (dict b)
+
+{-| Create two new bags; the first consisting of values which satisfy a predicate,
+the second consisting of values which do not.
+-}
+partition : (comparable -> Bool) -> Bag comparable -> (Bag comparable, Bag comparable)
+partition f b =
+    let
+        (p1, p2) = Dict.partition (\ v _ -> f v) (dict b)
+    in
+        (Bag p1, Bag p2)
