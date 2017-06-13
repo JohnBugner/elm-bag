@@ -44,23 +44,23 @@ empty = Bag Dict.empty
 
 {-| Create a bag with n copies of a value.
 -}
-repeat : comparable -> Int -> Bag comparable
-repeat v n = Bag <| Dict.singleton v n
+repeat : Int -> comparable -> Bag comparable
+repeat n v = Bag <| Dict.singleton v n
 
 {-| Insert n copies of a value into a bag.
 -}
-insert : comparable -> Int -> Bag comparable -> Bag comparable
-insert v n b = Bag <| Dict.insert v (count v b + n) (dict b)
+insert : Int -> comparable -> Bag comparable -> Bag comparable
+insert n v b = Bag <| Dict.insert v (count v b + n) (dict b)
 
 {-| Remove n copies of a value from a bag.
 If n is greater than the numbers of copies that are in the bag, then all copies are simply removed.
 
     bag = fromList ['a', 'a', 'b']
 
-    remove 'a' 3 bag == fromList ['b']
+    remove 3 'a' bag == fromList ['b']
 -}
-remove : comparable -> Int -> Bag comparable -> Bag comparable
-remove v n b =
+remove : Int -> comparable -> Bag comparable -> Bag comparable
+remove n v b =
     if count v b - n <= 0
     then Bag <| Dict.remove v (dict b)
     else Bag <| Dict.insert v (count v b - n) (dict b)
@@ -135,4 +135,4 @@ toList b = List.concatMap (\ (v, n) -> List.repeat n v) <| Dict.toList (dict b)
 {-| Convert a list into a bag.
 -}
 fromList : List comparable -> Bag comparable
-fromList = List.foldl (\ v -> insert v 1) empty
+fromList = List.foldl (insert 1) empty
