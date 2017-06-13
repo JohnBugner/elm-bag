@@ -89,7 +89,7 @@ count v b = Maybe.withDefault 0 <| Dict.get v (dict b)
 size : Bag a -> Int
 size b = Dict.size (dict b)
 
-{-| Get the union of two sets. For a value, its two counts are added.
+{-| Get the union of two bags. For a value, its two counts are added.
 -}
 union : Bag comparable -> Bag comparable -> Bag comparable
 union b1 b2 =
@@ -99,7 +99,7 @@ union b1 b2 =
     in
         Bag <| Dict.merge Dict.insert f Dict.insert (dict b1) (dict b2) Dict.empty
 
-{-| Get the intersection of two sets. For a value, the lesser of its two counts is taken.
+{-| Get the intersection of two bags. For a value, the lesser of its two counts is taken.
 -}
 intersect : Bag comparable -> Bag comparable -> Bag comparable
 intersect b1 b2 =
@@ -109,7 +109,7 @@ intersect b1 b2 =
     in
         Bag <| Dict.merge skip f skip (dict b1) (dict b2) Dict.empty
 
-{-| Get the difference between of two sets.
+{-| Get the difference between of two bags.
 For a value, the count of the second is removed from the count of the first.
 -}
 diff : Bag comparable -> Bag comparable -> Bag comparable
