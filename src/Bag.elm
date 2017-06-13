@@ -90,24 +90,20 @@ size b = Dict.size (dict b)
 union : Bag comparable -> Bag comparable -> Bag comparable
 union b1 b2 =
     let
-        one : comparable -> Int -> Dict comparable Int -> Dict comparable Int
-        one v n d = Dict.insert v n d
-        both : comparable -> Int -> Int -> Dict comparable Int -> Dict comparable Int
-        both v n1 n2 d = Dict.insert v (n1 + n2) d
+        f : comparable -> Int -> Int -> Dict comparable Int -> Dict comparable Int
+        f v n1 n2 d = Dict.insert v (n1 + n2) d
     in
-        Bag <| Dict.merge one both one (dict b1) (dict b2) Dict.empty
+        Bag <| Dict.merge Dict.insert f Dict.insert (dict b1) (dict b2) Dict.empty
 
 {-| Get the intersection of two sets. For a value, the lesser of its two counts is taken.
 -}
 intersect : Bag comparable -> Bag comparable -> Bag comparable
 intersect b1 b2 =
     let
-        one : comparable -> Int -> Dict comparable Int -> Dict comparable Int
-        one _ _ d = d
-        both : comparable -> Int -> Int -> Dict comparable Int -> Dict comparable Int
-        both v n1 n2 d = Dict.insert v (min n1 n2) d
+        f : comparable -> Int -> Int -> Dict comparable Int -> Dict comparable Int
+        f v n1 n2 d = Dict.insert v (min n1 n2) d
     in
-        Bag <| Dict.merge one both one (dict b1) (dict b2) Dict.empty
+        Bag <| Dict.merge skip f skip (dict b1) (dict b2) Dict.empty
 
 {-| Get the difference between of two sets.
 For a value, the count of the second is removed from the count of the first.
@@ -115,17 +111,17 @@ For a value, the count of the second is removed from the count of the first.
 diff : Bag comparable -> Bag comparable -> Bag comparable
 diff b1 b2 =
     let
-        left : comparable -> Int -> Dict comparable Int -> Dict comparable Int
-        left v n d = Dict.insert v n d
-        both : comparable -> Int -> Int -> Dict comparable Int -> Dict comparable Int
-        both v n1 n2 d =
+        f : comparable -> Int -> Int -> Dict comparable Int -> Dict comparable Int
+        f v n1 n2 d =
             if n1 - n2 <= 0
             then d
             else Dict.insert v (n1 - n2) d
-        right : comparable -> Int -> Dict comparable Int -> Dict comparable Int
-        right _ _ d = d
     in
-        Bag <| Dict.merge left both right (dict b1) (dict b2) Dict.empty
+        Bag <| Dict.merge Dict.insert f skip (dict b1) (dict b2) Dict.empty
+
+-- Insert nothing.
+skip : comparable -> Int -> Dict comparable Int -> Dict comparable Int
+skip _ _ d = d
 
 {-| Convert a bag into a list, sorted from lowest to highest.
 -}
