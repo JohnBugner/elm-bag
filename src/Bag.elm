@@ -49,12 +49,23 @@ empty = Bag Dict.empty
 {-| Create a bag with n copies of a value.
 -}
 repeat : Int -> comparable -> Bag comparable
-repeat n v = Bag <| Dict.singleton v n
+repeat n v =
+    if n > 0
+    then Bag <| Dict.singleton v n
+    else empty
 
 {-| Insert n copies of a value into a bag.
+If n is negative, then it removes -n copies of the value from the bag.
 -}
 insert : Int -> comparable -> Bag comparable -> Bag comparable
-insert n v b = Bag <| Dict.insert v (count v b + n) (dict b)
+insert n v b =
+    let
+        n_ : Int
+        n_ = count v b + n
+    in
+        if n_ > 0
+        then Bag <| Dict.insert v n_ (dict b)
+        else Bag <| Dict.remove v (dict b)
 
 {-| Remove n copies of a value from a bag.
 If n is greater than the numbers of copies that are in the bag, then all copies are simply removed.
@@ -62,12 +73,11 @@ If n is greater than the numbers of copies that are in the bag, then all copies 
     bag = fromList ['a', 'a', 'b']
 
     remove 3 'a' bag == fromList ['b']
+
+If n is negative, then it inserts -n copies of the value into the bag.
 -}
 remove : Int -> comparable -> Bag comparable -> Bag comparable
-remove n v b =
-    if count v b - n <= 0
-    then Bag <| Dict.remove v (dict b)
-    else Bag <| Dict.insert v (count v b - n) (dict b)
+remove n = insert -n
 
 {-| Determine if a bag is empty.
 -}
