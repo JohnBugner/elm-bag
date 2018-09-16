@@ -1,6 +1,6 @@
 module Bag exposing
     ( Bag
-    , empty, repeat, insert, remove
+    , empty, singleton, repeat, insert, remove
     , isEmpty, member, count, size
     , union, intersect, diff
     , toList, fromList
@@ -16,7 +16,7 @@ insert, remove, and query operations all take *O(log n)* time.
 @docs Bag
 
 # Build
-@docs empty, repeat, insert, remove
+@docs empty, singleton, repeat, insert, remove
 
 # Query
 @docs isEmpty, member, count, size
@@ -46,6 +46,11 @@ dict (Bag d) = d
 empty : Bag a
 empty = Bag Dict.empty
 
+{-| Create a bag with a single copy of a value.
+-}
+singleton : comparable -> Bag comparable
+singleton v = repeat 1 v
+
 {-| Create a bag with n copies of a value.
 -}
 repeat : Int -> comparable -> Bag comparable
@@ -67,12 +72,15 @@ insert n v b =
         then Bag <| Dict.insert v n_ (dict b)
         else Bag <| Dict.remove v (dict b)
 
+insertTuple : (comparable, Int) -> Bag comparable -> Bag comparable
+insertTuple (v,n) b = insert n v b
+
 {-| Remove n copies of a value from a bag.
 If n is greater than the numbers of copies that are in the bag, then all copies are simply removed.
 
-    bag = fromList ['a', 'a', 'b']
+    bag = fromList [('a',2),('b',1)]
 
-    remove 3 'a' bag == fromList ['b']
+    remove 3 'a' bag == fromList [('b',1)]
 
 If n is negative, then it inserts -n copies of the value into the bag.
 -}
@@ -139,28 +147,33 @@ skip _ _ d = d
 
 {-| Convert a bag into a list, sorted from lowest to highest.
 -}
-toList : Bag comparable -> List comparable
-toList b = List.concatMap (\ (v, n) -> List.repeat n v) <| Dict.toList (dict b)
+toList : Bag a -> List (a, Int)
+toList b = Dict.toList (dict b)
 
 {-| Convert a list into a bag.
 -}
-fromList : List comparable -> Bag comparable
-fromList = List.foldl (insert 1) empty
+fromList : List (comparable, Int) -> Bag comparable
+fromList = List.foldl insertTuple empty
 
 {-| Map a function onto a bag, creating a new bag.
+If keys clash after mapping, their counts are simply added.
+
+    bag = fromList [('a',2),('b',1)]
+
+    map (always 'c') bag == fromList [('c',3)]
 -}
 map : (comparable -> comparable2) -> Bag comparable -> Bag comparable2
-map f b = fromList <| List.map f <| toList b
+map f b = fromList <| List.map (\ (k,v) -> (f k, v)) <| Dict.toList (dict b)
 
 {-| Fold over the values in a bag, in order from lowest to highest.
 -}
-foldl : (comparable -> b -> b) -> b -> Bag comparable -> b
-foldl f r b = Dict.foldl (\ v _ r -> f v r) r (dict b)
+foldl : (comparable -> Int -> b -> b) -> b -> Bag comparable -> b
+foldl f r b = Dict.foldl f r (dict b)
 
 {-| Fold over the values in a bag, in order from highest to lowest
 -}
-foldr : (comparable -> b -> b) -> b -> Bag comparable -> b
-foldr f r b = Dict.foldr (\ v _ r -> f v r) r (dict b)
+foldr : (comparable -> Int -> b -> b) -> b -> Bag comparable -> b
+foldr f r b = Dict.foldr f r (dict b)
 
 {-| Create a new bag consisting only of values which satisfy a predicate.
 -}
