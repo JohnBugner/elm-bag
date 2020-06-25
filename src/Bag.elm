@@ -103,9 +103,13 @@ count : comparable -> Bag comparable -> Int
 count v b = Maybe.withDefault 0 <| Dict.get v (dict b)
 
 {-| Determine the number of values in a bag.
+
+    bag = fromList [('a',2),('b',1)]
+
+    size bag == 3
 -}
 size : Bag a -> Int
-size b = Dict.size (dict b)
+size b = foldl (always (+)) 0 b
 
 {-| Get the union of two bags. For a value, its two counts are added.
 -}
@@ -167,12 +171,12 @@ map f b = fromList <| List.map (\ (k,v) -> (f k, v)) <| Dict.toList (dict b)
 
 {-| Fold over the values in a bag, in order from lowest to highest.
 -}
-foldl : (comparable -> Int -> b -> b) -> b -> Bag comparable -> b
+foldl : (a -> Int -> b -> b) -> b -> Bag a -> b
 foldl f r b = Dict.foldl f r (dict b)
 
 {-| Fold over the values in a bag, in order from highest to lowest
 -}
-foldr : (comparable -> Int -> b -> b) -> b -> Bag comparable -> b
+foldr : (a -> Int -> b -> b) -> b -> Bag a -> b
 foldr f r b = Dict.foldr f r (dict b)
 
 {-| Create a new bag consisting only of values which satisfy a predicate.
