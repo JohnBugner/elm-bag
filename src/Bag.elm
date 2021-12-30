@@ -3,7 +3,7 @@ module Bag exposing
     , empty, singleton, repeat, insert, remove
     , isEmpty, member, count, size
     , union, intersect, diff
-    , toList, fromList
+    , toList, fromList, toAssociationList, fromAssociationList
     , map, foldl, foldr, filter, partition
     )
 
@@ -25,7 +25,7 @@ insert, remove, and query operations all take *O(log n)* time.
 @docs union, intersect, diff
 
 # Lists
-@docs toList, fromList
+@docs toList, fromList, toAssociationList, fromAssociationList
 
 # Transform
 @docs map, foldl, foldr, filter, partition
@@ -71,9 +71,6 @@ insert n v b =
         if n_ > 0
         then Bag <| Dict.insert v n_ (dict b)
         else Bag <| Dict.remove v (dict b)
-
-insertTuple : (comparable, Int) -> Bag comparable -> Bag comparable
-insertTuple (v,n) b = insert n v b
 
 {-| Remove n copies of a value from a bag.
 If n is greater than the numbers of copies that are in the bag, then all copies are simply removed.
@@ -151,13 +148,23 @@ skip _ _ d = d
 
 {-| Convert a bag into a list, sorted from lowest to highest.
 -}
-toList : Bag a -> List (a, Int)
-toList b = Dict.toList (dict b)
+toList : Bag a -> List a
+toList b = List.concat <| List.map (\ (v,n) -> List.repeat n v) <| toAssociationList b
 
 {-| Convert a list into a bag.
 -}
-fromList : List (comparable, Int) -> Bag comparable
-fromList = List.foldl insertTuple empty
+fromList : List comparable -> Bag comparable
+fromList = List.foldl (insert 1) empty
+
+{-| Convert a bag into an association list, sorted from lowest to highest.
+-}
+toAssociationList : Bag a -> List (a, Int)
+toAssociationList b = Dict.toList (dict b)
+
+{-| Convert an association list into a bag.
+-}
+fromAssociationList : List (comparable, Int) -> Bag comparable
+fromAssociationList = List.foldl (\ (v,n) -> insert n v) empty
 
 {-| Map a function onto a bag, creating a new bag.
 If keys clash after mapping, their counts are simply added.
@@ -167,7 +174,7 @@ If keys clash after mapping, their counts are simply added.
     map (always 'c') bag == fromList [('c',3)]
 -}
 map : (comparable -> comparable2) -> Bag comparable -> Bag comparable2
-map f b = fromList <| List.map (\ (k,v) -> (f k, v)) <| Dict.toList (dict b)
+map f b = fromAssociationList <| List.map (\ (k,v) -> (f k, v)) <| Dict.toList (dict b)
 
 {-| Fold over the values in a bag, in order from lowest to highest.
 -}
