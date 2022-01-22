@@ -1,9 +1,9 @@
 module Bag exposing
     ( Bag
-    , empty, singleton, repeat, insert, remove
+    , empty, singleton, repeat, insert, remove, removeAll
     , isEmpty, member, count, size
     , union, intersect, diff
-    , toList, fromList, toAssociationList, fromAssociationList
+    , toList, fromList, toAssociationList, fromAssociationList, toSet, fromSet
     , map, foldl, foldr, filter, partition
     )
 
@@ -16,7 +16,7 @@ insert, remove, and query operations all take *O(log n)* time.
 @docs Bag
 
 # Build
-@docs empty, singleton, repeat, insert, remove
+@docs empty, singleton, repeat, insert, remove, removeAll
 
 # Query
 @docs isEmpty, member, count, size
@@ -25,13 +25,14 @@ insert, remove, and query operations all take *O(log n)* time.
 @docs union, intersect, diff
 
 # Lists
-@docs toList, fromList, toAssociationList, fromAssociationList
+@docs toList, fromList, toAssociationList, fromAssociationList, toSet, fromSet
 
 # Transform
 @docs map, foldl, foldr, filter, partition
 -}
 
 import Dict exposing (Dict)
+import Set exposing (Set)
 
 {-| A set of possibly multiple values.
 -}
@@ -49,7 +50,7 @@ empty = Bag Dict.empty
 {-| Create a bag with a single copy of a value.
 -}
 singleton : comparable -> Bag comparable
-singleton v = repeat 1 v
+singleton v = Bag <| Dict.singleton v 1
 
 {-| Create a bag with n copies of a value.
 -}
@@ -63,14 +64,19 @@ repeat n v =
 If n is negative, then it removes -n copies of the value from the bag.
 -}
 insert : Int -> comparable -> Bag comparable -> Bag comparable
-insert n v b =
+insert n_ v b =
     let
-        n_ : Int
-        n_ = count v b + n
+        f : Maybe Int -> Maybe Int
+        f ma =
+            let
+                n__ : Int
+                n__ = n_ + Maybe.withDefault 0 ma
+            in
+                if n__ > 0
+                then Just n__
+                else Nothing
     in
-        if n_ > 0
-        then Bag <| Dict.insert v n_ (dict b)
-        else Bag <| Dict.remove v (dict b)
+        Bag <| Dict.update v f (dict b)
 
 {-| Remove n copies of a value from a bag.
 If n is greater than the numbers of copies that are in the bag, then all copies are simply removed.
@@ -83,6 +89,11 @@ If n is negative, then it inserts -n copies of the value into the bag.
 -}
 remove : Int -> comparable -> Bag comparable -> Bag comparable
 remove n = insert -n
+
+{-| Remove all copies of a value from a bag.
+-}
+removeAll : comparable -> Bag comparable -> Bag comparable
+removeAll v b = Bag <| Dict.update v (always Nothing) (dict b)
 
 {-| Determine if a bag is empty.
 -}
@@ -106,7 +117,7 @@ count v b = Maybe.withDefault 0 <| Dict.get v (dict b)
     size bag == 3
 -}
 size : Bag a -> Int
-size b = foldl (always (+)) 0 b
+size = foldl (always (+)) 0
 
 {-| Get the union of two bags. For a value, its two counts are added.
 -}
@@ -149,7 +160,7 @@ skip _ _ d = d
 {-| Convert a bag into a list, sorted from lowest to highest.
 -}
 toList : Bag a -> List a
-toList b = List.concat <| List.map (\ (v,n) -> List.repeat n v) <| toAssociationList b
+toList b = List.concatMap (\ (v,n) -> List.repeat n v) <| toAssociationList b
 
 {-| Convert a list into a bag.
 -}
@@ -165,6 +176,16 @@ toAssociationList b = Dict.toList (dict b)
 -}
 fromAssociationList : List (comparable, Int) -> Bag comparable
 fromAssociationList = List.foldl (\ (v,n) -> insert n v) empty
+
+{-| Convert a bag into a set.
+-}
+toSet : Bag comparable -> Set comparable
+toSet = foldl (\ v _ s -> Set.insert v s) Set.empty
+
+{-| Convert a set into a bag.
+-}
+fromSet : Set comparable -> Bag comparable
+fromSet = Set.foldl (insert 1) empty
 
 {-| Map a function onto a bag, creating a new bag.
 If keys clash after mapping, their counts are simply added.
